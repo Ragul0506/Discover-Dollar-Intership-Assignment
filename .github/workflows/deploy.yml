@@ -1,0 +1,40 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Build & push backend image
+      - name: Build & Push Backend Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: sarwanragul/crud-mean-backend:latest
+          context: ./backend
+
+      # Build & push frontend image
+      - name: Build & Push Frontend Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: sarwanragul/crud-mean-frontend:latest
+          context: ./frontend
+
+      # Deploy to server via SSH
+      - name: Deploy on Remote Server
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ~/deploy
+            docker compose pull
+            docker compose up -d
+

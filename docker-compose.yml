@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+
+  mongo:
+    image: mongo:latest
+    container_name: deploy-mongo-1
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+
+  backend:
+    image: sarwanragul/crud-mean-backend:latest
+    container_name: deploy-backend-1
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/testdb
+    ports:
+      - "3000:8080"  # Host 3000 -> container 8080
+    depends_on:
+      - mongo
+    restart: always
+
+  frontend:
+    image: sarwanragul/crud-mean-frontend:latest
+    container_name: deploy-frontend-1
+    depends_on:
+      - backend
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    container_name: deploy-nginx-1
+    ports:
+      - "80:80"  # Expose HTTP
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+
+volumes:
+  mongo-data:
+
